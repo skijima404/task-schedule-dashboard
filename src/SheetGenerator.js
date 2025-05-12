@@ -75,7 +75,7 @@ function generateThreeMonthCalendar() {
   let startRow = 1;
   for (const { year, month } of months) {
     const monthTitle = `${monthNames[month]} ${year}`;
-    sheet.getRange(startRow, 1, 1, 7).merge().setValue(monthTitle);
+    sheet.getRange(startRow, 1, 1, 7).merge().setValue("'" + monthTitle);
     sheet.getRange(startRow, 1).setFontWeight("bold").setHorizontalAlignment("center");
     startRow++;
 

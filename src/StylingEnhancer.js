@@ -72,6 +72,8 @@ function colorFillRateInHeatmap() {
     }
   }
 
+  Logger.log("📊 FillRateMap size: " + fillRateMap.size); //
+
   const range = heatmapSheet.getDataRange();
   const values = range.getValues();
   const backgrounds = range.getBackgrounds();
@@ -86,10 +88,13 @@ function colorFillRateInHeatmap() {
       const dateStr = Utilities.formatDate(cellVal, Session.getScriptTimeZone(), "yyyy-MM-dd");
       const rate = fillRateMap.get(dateStr);
 
+      Logger.log("Checking: " + dateStr + " → " + rate);
+
       if (rate === undefined) continue;
 
       // すでに背景色が土日祝や休暇の色であれば上書きしない
-      if (cellBg === "#EEEEEE" || cellBg === "#B3E5FC") continue;
+      const bg = cellBg.toLowerCase();  // ← 小文字に変換して比較
+      if (bg === "#eeeeee" || bg === "#b3e5fc") continue;
 
       if (rate >= redThreshold) {
         backgrounds[i][j] = "#f4cccc";

@@ -75,20 +75,28 @@ function colorMyVacations() {
 
 function colorWeekendsAndHolidaysInRange(sheet, rowStart, rowEnd) {
   const cal = CalendarApp.getCalendarById("en.japanese#holiday@group.v.calendar.google.com");
-  const start = new Date();
-  const end = new Date(start.getFullYear(), start.getMonth() + 3, 0);
-  const holidays = cal.getEvents(start, end).map(e => Utilities.formatDate(e.getStartTime(), Session.getScriptTimeZone(), "yyyy-MM-dd"));
 
+  // ---- タイトル行から年月を抽出 ----
   let raw = sheet.getRange(rowStart - 2, 1).getValue();
   if (raw instanceof Date) {
     raw = Utilities.formatDate(raw, Session.getScriptTimeZone(), "MMMM yyyy");
   }
   const [monthNameStr, yearStr] = String(raw).split(" ");
-  const monthNames = ["January", "February", "March", "April", "May", "June", "July",
-                      "August", "September", "October", "November", "December"];
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June", "July",
+    "August", "September", "October", "November", "December"
+  ];
   const expectedMonth = monthNames.indexOf(monthNameStr);
   const expectedYear = Number(yearStr);
 
+  // ---- 祝日範囲をその月の1日〜末日までに限定 ----
+  const start = new Date(expectedYear, expectedMonth, 1);
+  const end = new Date(expectedYear, expectedMonth + 1, 0);
+  const holidays = cal.getEvents(start, end).map(e =>
+    Utilities.formatDate(e.getStartTime(), Session.getScriptTimeZone(), "yyyy-MM-dd")
+  );
+
+  // ---- 背景色を設定 ----
   const range = sheet.getRange(rowStart, 1, rowEnd - rowStart + 1, 7);
   const values = range.getValues();
   const backgrounds = range.getBackgrounds();
