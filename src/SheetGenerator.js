@@ -54,3 +54,60 @@ function createMonthlySheets() {
   colorWeekendsAndHolidays();
   colorMyVacations(); // ← もし常時含めるならここに追加してもOK
 }
+
+// === 3 Month Heatmap ===
+
+function generateThreeMonthCalendar() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName("Heatmap") || ss.insertSheet("Heatmap", 0);
+  sheet.clear();
+
+  const today = new Date();
+  const months = [];
+  for (let i = 0; i < 3; i++) {
+    const date = new Date(today.getFullYear(), today.getMonth() + i, 1);
+    months.push({ year: date.getFullYear(), month: date.getMonth() });
+  }
+
+  const monthNames = ["January", "February", "March", "April", "May", "June", "July",
+                      "August", "September", "October", "November", "December"];
+
+  let startRow = 1;
+  for (const { year, month } of months) {
+    const monthTitle = `${monthNames[month]} ${year}`;
+    sheet.getRange(startRow, 1, 1, 7).merge().setValue(monthTitle);
+    sheet.getRange(startRow, 1).setFontWeight("bold").setHorizontalAlignment("center");
+    startRow++;
+
+    const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    sheet.getRange(startRow, 1, 1, 7).setValues([weekdays]);
+    sheet.getRange(startRow, 1, 1, 7).setFontWeight("bold").setHorizontalAlignment("center");
+    startRow++;
+
+    const firstDay = new Date(year, month, 1);
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    let day = 1;
+    const calendarStartRow = startRow;
+
+    for (let i = 0; day <= daysInMonth; i++) {
+      const row = new Array(7).fill("");
+      for (let d = 0; d < 7 && day <= daysInMonth; d++) {
+        const cellDate = new Date(year, month, day);
+        const weekday = cellDate.getDay();
+        const colIndex = (weekday + 6) % 7;
+        if (i === 0 && colIndex !== d) continue;
+        row[colIndex] = new Date(year, month, day);
+        day++;
+      }
+      sheet.getRange(startRow, 1, 1, 7).setValues([row.map(d => d ? d : "")]);
+      sheet.getRange(startRow, 1, 1, 7).setNumberFormat("d").setHorizontalAlignment("right");
+      startRow++;
+    }
+
+    const calendarEndRow = startRow - 1;
+    colorWeekendsAndHolidaysInRange(sheet, calendarStartRow, calendarEndRow);
+  }
+
+  sheet.setColumnWidths(1, 7, 40);
+  sheet.setRowHeights(1, sheet.getLastRow(), 35);
+} 

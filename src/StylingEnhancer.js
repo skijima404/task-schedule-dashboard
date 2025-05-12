@@ -41,3 +41,90 @@ function updateStatsAndStyle() {
   updateStatsForCurrentSheet();
   colorByFillRate();
 }
+
+// === 3Month Heatmap ===
+
+function colorFillRateInHeatmap() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const heatmapSheet = ss.getSheetByName("Heatmap");
+  const paramSheet = ss.getSheetByName("Param");
+  const paramValues = paramSheet.getRange("A2:B").getValues();
+  const paramMap = Object.fromEntries(paramValues.filter(r => r[0] && r[1]));
+
+  const redThreshold = Number(paramMap["fill_rate_red"] || 80);
+  const yellowThreshold = Number(paramMap["fill_rate_yellow"] || 50);
+
+  const monthSheets = ss.getSheets().filter(s => /^[A-Z][a-z]{2}\d{4}$/.test(s.getName()));
+  const fillRateMap = new Map();
+
+  for (const sheet of monthSheets) {
+    const data = sheet.getDataRange().getValues();
+    const dateIdx = data[0].indexOf("日付");
+    const rateIdx = data[0].findIndex(h => typeof h === "string" && h.match(/埋まり率.*%/));
+    if (dateIdx === -1 || rateIdx === -1) continue;
+
+    for (let i = 1; i < data.length; i++) {
+      const dateStr = data[i][dateIdx];
+      const rate = data[i][rateIdx];
+      if (dateStr && typeof rate === "number") {
+        fillRateMap.set(Utilities.formatDate(new Date(dateStr), Session.getScriptTimeZone(), "yyyy-MM-dd"), rate);
+      }
+    }
+  }
+
+  const range = heatmapSheet.getDataRange();
+  const values = range.getValues();
+  const backgrounds = range.getBackgrounds();
+
+  for (let i = 0; i < values.length; i++) {
+    for (let j = 0; j < values[i].length; j++) {
+      const cellVal = values[i][j];
+      const cellBg = backgrounds[i][j];
+
+      if (!(cellVal instanceof Date)) continue;
+
+      const dateStr = Utilities.formatDate(cellVal, Session.getScriptTimeZone(), "yyyy-MM-dd");
+      const rate = fillRateMap.get(dateStr);
+
+      if (rate === undefined) continue;
+
+      // すでに背景色が土日祝や休暇の色であれば上書きしない
+      if (cellBg === "#EEEEEE" || cellBg === "#B3E5FC") continue;
+
+      if (rate >= redThreshold) {
+        backgrounds[i][j] = "#f4cccc";
+      } else if (rate >= yellowThreshold) {
+        backgrounds[i][j] = "#fff2cc";
+      } else {
+        backgrounds[i][j] = "#d9ead3";
+      }
+    }
+  }
+
+  range.setBackgrounds(backgrounds);
+}
+
+function highlightTodayInHeatmap() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName("Heatmap");
+  if (!sheet) return;
+
+  const today = new Date();
+  const todayStr = Utilities.formatDate(today, Session.getScriptTimeZone(), "yyyy-MM-dd");
+  const range = sheet.getDataRange();
+  const values = range.getValues();
+  const borders = range.getBorder();
+
+  for (let i = 0; i < values.length; i++) {
+    for (let j = 0; j < values[i].length; j++) {
+      const cell = values[i][j];
+      if (Object.prototype.toString.call(cell) === "[object Date]") {
+        const cellStr = Utilities.formatDate(cell, Session.getScriptTimeZone(), "yyyy-MM-dd");
+        if (cellStr === todayStr) {
+          sheet.getRange(i + 1, j + 1).setBorder(true, true, true, true, false, false, "black", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);
+          return;
+        }
+      }
+    }
+  }
+} 
