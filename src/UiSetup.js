@@ -17,13 +17,13 @@ function onEdit(e) {
 
 function onOpen() {
   const ui = SpreadsheetApp.getUi();
-  ui.createMenu("📊 ダッシュボード")
-    .addItem("📆 今開いている月を更新", "updateStatsAndStyle")
-    .addItem("🔁 全シート統計を更新", "updateCalendarStats")
-    .addSeparator()
-    .addItem("🎨 休暇日を反映", "colorMyVacations")
-    .addItem("🌈 埋まり率で色分け", "colorByFillRate")
-    .addSeparator()
-    .addItem("📅 月別シートを作成", "createMonthlySheets")
+  ui.createMenu("Task Dashboard")
+    .addItem("📅 Generate Monthly Sheets", "createMonthlySheets")
+    .addItem("📊 Update Stats & Style", "updateStatsAndStyle")
+    .addItem("🔁 Update All Sheet Stats", "updateCalendarStats") // ★ 追加
+    .addItem("🌈 Apply Fill Rate to Heatmap", "colorFillRateInHeatmap")
+    .addItem("🏖️ Highlight Vacations", "colorMyVacationsEverywhere")
+    .addItem("⭐ Highlight Today", "highlightTodayInHeatmap")
+    .addItem("🗓️ Generate 3-Month Heatmap", "generateThreeMonthCalendar")
     .addToUi();
 }

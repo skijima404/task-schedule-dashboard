@@ -31,7 +31,7 @@ function colorWeekendsAndHolidays() {
     }
   });
 
-  SpreadsheetApp.getUi().alert("土日・祝日（Google）をグレーに塗りました！");
+  // SpreadsheetApp.getUi().alert("土日・祝日（Google）をグレーに塗りました！");
 }
 
 function colorMyVacations() {
@@ -67,5 +67,89 @@ function colorMyVacations() {
     }
   });
 
-  SpreadsheetApp.getUi().alert("MyVacation に登録された休暇日を塗りました！");
+  // SpreadsheetApp.getUi().alert("MyVacation に登録された休暇日を塗りました！");
+}
+
+
+// === 3Month Heatmap ===
+
+function colorWeekendsAndHolidaysInRange(sheet, rowStart, rowEnd) {
+  const cal = CalendarApp.getCalendarById("en.japanese#holiday@group.v.calendar.google.com");
+
+  // ---- タイトル行から年月を抽出 ----
+  let raw = sheet.getRange(rowStart - 2, 1).getValue();
+  if (raw instanceof Date) {
+    raw = Utilities.formatDate(raw, Session.getScriptTimeZone(), "MMMM yyyy");
+  }
+  const [monthNameStr, yearStr] = String(raw).split(" ");
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June", "July",
+    "August", "September", "October", "November", "December"
+  ];
+  const expectedMonth = monthNames.indexOf(monthNameStr);
+  const expectedYear = Number(yearStr);
+
+  // ---- 祝日範囲をその月の1日〜末日までに限定 ----
+  const start = new Date(expectedYear, expectedMonth, 1);
+  const end = new Date(expectedYear, expectedMonth + 1, 0);
+  const holidays = cal.getEvents(start, end).map(e =>
+    Utilities.formatDate(e.getStartTime(), Session.getScriptTimeZone(), "yyyy-MM-dd")
+  );
+
+  // ---- 背景色を設定 ----
+  const range = sheet.getRange(rowStart, 1, rowEnd - rowStart + 1, 7);
+  const values = range.getValues();
+  const backgrounds = range.getBackgrounds();
+
+  for (let i = 0; i < values.length; i++) {
+    for (let j = 0; j < values[i].length; j++) {
+      const cell = values[i][j];
+      if (Object.prototype.toString.call(cell) === "[object Date]") {
+        if (cell.getMonth() !== expectedMonth || cell.getFullYear() !== expectedYear) continue;
+
+        const day = cell.getDay();
+        const dateStr = Utilities.formatDate(cell, Session.getScriptTimeZone(), "yyyy-MM-dd");
+        if (day === 0 || day === 6 || holidays.includes(dateStr)) {
+          backgrounds[i][j] = "#EEEEEE";
+        }
+      }
+    }
+  }
+
+  range.setBackgrounds(backgrounds);
+}
+
+function colorMyVacationsForHeatmap() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName("Heatmap");
+  const vacationSheet = ss.getSheetByName("MyVacation");
+  if (!sheet || !vacationSheet) return;
+
+  const vacationDates = vacationSheet.getRange("A2:A").getValues().flat().filter(v => v instanceof Date);
+  const vacationStrSet = new Set(vacationDates.map(d => Utilities.formatDate(d, Session.getScriptTimeZone(), "yyyy-MM-dd")));
+
+  const range = sheet.getDataRange();
+  const values = range.getValues();
+  const backgrounds = range.getBackgrounds();
+
+  for (let i = 2; i < values.length; i++) {
+    for (let j = 0; j < values[i].length; j++) {
+      const cell = values[i][j];
+      if (Object.prototype.toString.call(cell) === "[object Date]") {
+        const dateStr = Utilities.formatDate(cell, Session.getScriptTimeZone(), "yyyy-MM-dd");
+        if (vacationStrSet.has(dateStr)) {
+          backgrounds[i][j] = "#B3E5FC";
+        }
+      }
+    }
+  }
+
+  range.setBackgrounds(backgrounds);
+} 
+
+// Vacationようハンドラ
+
+function colorMyVacationsEverywhere() {
+  colorMyVacations();
+  colorMyVacationsForHeatmap();
 }
