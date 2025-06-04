@@ -84,10 +84,19 @@ function mergeOverlappingIntervals(intervals) {
 
 function updateCalendarStats() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheets = ss.getSheets().filter(s => /^[A-Z][a-z]{2}\d{4}$/.test(s.getName()));
-  sheets.forEach(sheet => {
-    ss.setActiveSheet(sheet);
-    updateStatsForCurrentSheet();
-  });
-  SpreadsheetApp.getUi().alert("すべての月シートの統計データを更新しました！");
+  const today = new Date();
+  const sheets = ss.getSheets();
+
+  for (let offset = 0; offset < 3; offset++) {
+    const targetDate = new Date(today.getFullYear(), today.getMonth() + offset, 1);
+    const monthName = targetDate.toLocaleString("en-US", { month: "short" }) +
+                      targetDate.getFullYear(); // "Jun2025" の形式
+
+    const sheet = sheets.find(s => s.getName() === monthName);
+    if (sheet) {
+      ss.setActiveSheet(sheet);
+      updateStatsAndStyle(); // StylingEnhancer.js 側の関数
+    }
+  }
+  SpreadsheetApp.getUi().alert("直近3ヶ月のシートを更新しました！");
 }

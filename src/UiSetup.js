@@ -20,7 +20,7 @@ function onOpen() {
   ui.createMenu("Task Dashboard")
     .addItem("📅 Generate Monthly Sheets", "createMonthlySheets")
     .addItem("📊 Update Stats & Style", "updateStatsAndStyle")
-    .addItem("🔁 Update All Sheet Stats", "updateCalendarStats") // ★ 追加
+    .addItem("🔁 Update 3 Month Sheet Stats", "updateCalendarStats") // ★ 追加
     .addItem("🌈 Apply Fill Rate to Heatmap", "colorFillRateInHeatmap")
     .addItem("🏖️ Highlight Vacations", "colorMyVacationsEverywhere")
     .addItem("⭐ Highlight Today", "highlightTodayInHeatmap")

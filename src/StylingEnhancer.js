@@ -42,6 +42,9 @@ function updateStatsAndStyle() {
   colorByFillRate();
 }
 
+// Update 3 Month Stats And Style のスクリプトはStatsUpdater.js にあります
+
+
 // === 3Month Heatmap ===
 
 function colorFillRateInHeatmap() {
